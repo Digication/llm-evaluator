@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment variables (never commit these)
+.env
+.env.*
+
+# Mac system files
+.DS_Store
+
+# DeepEval local config
+.deepeval/

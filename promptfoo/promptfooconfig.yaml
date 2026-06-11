@@ -1,0 +1,34 @@
+# Digication LLM Evaluation — Promptfoo
+# Pre-processes CSV data via provider.js passthrough, scores with custom JS assertions.
+# Run: promptfoo eval --config promptfoo/promptfooconfig.yaml --output results.jsonl
+# Then: python promptfoo/process_output.py results.jsonl
+
+providers:
+  - id: "file://provider.js"
+
+# Prompt is unused — the provider returns the pre-recorded response directly.
+# Promptfoo requires a prompt, so we pass a no-op placeholder.
+prompts:
+  - "{{assistant_response}}"
+
+# CSV must be pre-processed by poc_eval_promptfoo.py before running promptfoo eval.
+# That script adds: has_safety_signal, is_summary, full_conversation columns.
+tests: file://processed_conversations.csv
+
+defaultTest:
+  assert:
+    - type: javascript
+      value: "file://scorers/stop-sequence.js"
+      metric: stop_sequence_misuse
+    - type: javascript
+      value: "file://scorers/reflective-questioning.js"
+      metric: reflective_questioning
+    - type: javascript
+      value: "file://scorers/crisis-response.js"
+      metric: crisis_response
+    - type: javascript
+      value: "file://scorers/summary-quality.js"
+      metric: summary_quality
+
+# Run up to 10 tests concurrently
+maxConcurrency: 10
