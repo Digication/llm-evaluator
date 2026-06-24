@@ -1,0 +1,49 @@
+name: Evaluate Dataset
+
+on:
+  workflow_dispatch:
+    inputs:
+      generator_run_id:
+        description: 'Run ID from llm-dataset-generator Actions run (the number in the URL: /runs/1234567890)'
+        required: true
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout llm-evaluator
+        uses: actions/checkout@v5
+
+      - name: Download merged CSV from dataset generator
+        run: |
+          gh run download ${{ inputs.generator_run_id }} \
+            --repo Digication/llm-dataset-generator \
+            --pattern "dataset-MERGED-*" \
+            -D downloaded/
+          find downloaded/ -name "*.csv" | head -1 | xargs -I{} cp {} input/merged.csv
+          echo "CSV ready: $(wc -l < input/merged.csv) rows"
+        env:
+          GH_TOKEN: ${{ secrets.ORG_ACCESS_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install openai arize-phoenix-evals pandas
+
+      - name: Run evaluation
+        env:
+          OPENAI_API_KEY: ${{ fromJson(secrets.API_SECRETS).OPENAI_API_KEY }}
+        run: python poc_eval_phoenix.py input/merged.csv
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: eval-results-${{ github.run_id }}
+          path: input/*.csv
+          if-no-files-found: warn
+          retention-days: 30
