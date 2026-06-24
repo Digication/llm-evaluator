@@ -17,6 +17,7 @@ import json
 import os
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
 import pandas as pd
@@ -336,16 +337,24 @@ def load_and_prepare(csv_path: str) -> tuple:
         (df["turn"] >= 1) & (df["turn"] < df["summary_turn"])
     ].copy().reset_index(drop=True)
 
-    # Detect safety signals — iterate by conversation, log every 50 convos
-    conversation_ids = regular_df["conversation_id"].unique()
-    total_convos = len(conversation_ids)
-    print(f"Detecting safety signals ({total_convos} conversations, 1 LLM call per turn)...")
-    signals = [None] * len(regular_df)
-    for convo_num, cid in enumerate(conversation_ids, start=1):
-        if convo_num == 1 or convo_num % 5 == 0:
-            print(f"  Safety signals: conversation {convo_num}/{total_convos}...", flush=True)
-        for idx in regular_df[regular_df["conversation_id"] == cid].index:
-            signals[idx] = has_safety_signal(str(regular_df.at[idx, "student_message"]))
+    # Detect safety signals — run concurrently across all turns
+    texts = regular_df["student_message"].tolist()
+    total_turns = len(texts)
+    print(f"Detecting safety signals ({total_turns} turns, {CONCURRENCY} concurrent)...")
+    signals = [False] * total_turns
+    completed = 0
+    with ThreadPoolExecutor(max_workers=CONCURRENCY) as executor:
+        futures = {executor.submit(has_safety_signal, str(text)): i for i, text in enumerate(texts)}
+        for future in as_completed(futures):
+            i = futures[future]
+            try:
+                signals[i] = future.result()
+            except Exception as e:
+                print(f"  Warning: safety signal check failed for row {i}: {e}", flush=True)
+                signals[i] = False
+            completed += 1
+            if completed % 500 == 0 or completed == total_turns:
+                print(f"  Safety signals: {completed}/{total_turns}...", flush=True)
     regular_df["has_safety_signal"] = signals
 
     normal_df = regular_df[~regular_df["has_safety_signal"]].copy().reset_index(drop=True)
