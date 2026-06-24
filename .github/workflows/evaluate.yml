@@ -1,11 +1,16 @@
 name: Evaluate Dataset
 
 on:
+  # Auto-trigger when a CSV is pushed to input/
+  push:
+    paths:
+      - 'input/*.csv'
+  # Also runnable manually with a run ID from the dataset generator
   workflow_dispatch:
     inputs:
       generator_run_id:
         description: 'Run ID from llm-dataset-generator Actions run (the number in the URL: /runs/1234567890)'
-        required: true
+        required: false
 
 jobs:
   evaluate:
@@ -15,7 +20,9 @@ jobs:
       - name: Checkout llm-evaluator
         uses: actions/checkout@v5
 
+      # Only runs when triggered manually with a run ID — skipped on push
       - name: Download merged CSV from dataset generator
+        if: ${{ inputs.generator_run_id != '' }}
         run: |
           gh run download ${{ inputs.generator_run_id }} \
             --repo Digication/llm-dataset-generator \
@@ -25,6 +32,14 @@ jobs:
           echo "CSV ready: $(wc -l < input/merged.csv) rows"
         env:
           GH_TOKEN: ${{ secrets.ORG_ACCESS_TOKEN }}
+
+      - name: Find CSV to evaluate
+        id: find-csv
+        run: |
+          # Use the pushed file if triggered by push, otherwise use downloaded merged.csv
+          csv=$(find input/ -name "*.csv" | grep -v "_results\|_conv_results\|eval-summary" | head -1)
+          echo "csv=$csv" >> $GITHUB_OUTPUT
+          echo "Evaluating: $csv ($(wc -l < $csv) rows)"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -37,13 +52,13 @@ jobs:
       - name: Run evaluation
         env:
           OPENAI_API_KEY: ${{ fromJson(secrets.API_SECRETS).OPENAI_API_KEY }}
-        run: python poc_eval_phoenix.py input/merged.csv
+        run: python poc_eval_phoenix.py ${{ steps.find-csv.outputs.csv }}
 
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v5
         with:
           name: eval-results-${{ github.run_id }}
-          path: input/*.csv
+          path: input/*_results.csv
           if-no-files-found: warn
           retention-days: 30
