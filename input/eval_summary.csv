@@ -1,3 +1,0 @@
-run_name,candidate_model,timestamp,reflective_questioning,emotional_acknowledgment,does_not_answer_for_student,stays_in_scope,response_length_pass_rate,crisis_response,stop_sequence_pass_rate,summary_quality,n_normal_turns,n_crisis_turns,n_summaries
-trial1,gemini-2.5-flash,2026-05-29 21:35,100.0%,38.0,38,51.3%,19.5,38,97.4%,37.0,38,90.8%,34.5,38,100.0%,38.0,38,n/a,n/a,0,100.0%,38.0,38,75.0%,1.5,2,38,0,2
-gemini-flash-2.5-20Turns-10Assistants-7Personas-Sheet1,gemini-2.5-flash,2026-05-29 14:57,97.8%,48.4%,97.3%,89.0%,99.3%,48.9%,100.0%,76.4%,1092,238,70
