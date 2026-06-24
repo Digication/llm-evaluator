@@ -49,9 +49,10 @@ jobs:
       - name: Install dependencies
         run: pip install openai arize-phoenix-evals pandas
 
+      - name: Extract API key
+        run: echo "OPENAI_API_KEY=$(echo '${{ secrets.API_SECRETS }}' | jq -r '.OPENAI_API_KEY')" >> $GITHUB_ENV
+
       - name: Run evaluation
-        env:
-          OPENAI_API_KEY: ${{ fromJson(secrets.API_SECRETS).OPENAI_API_KEY }}
         run: python poc_eval_phoenix.py ${{ steps.find-csv.outputs.csv }}
 
       - name: Upload results
