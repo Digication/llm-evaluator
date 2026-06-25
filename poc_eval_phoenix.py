@@ -15,6 +15,7 @@ import asyncio
 import csv
 import json
 import os
+import signal
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -716,36 +717,40 @@ async def run_evals(regular_df, normal_df, crisis_df, summary_df, conv_df, conv_
     stop_total, stop_n = sum(stop_scores_list), len(stop_scores_list)
     print(f"  Stop Sequence Misuse: {stop_pass_rate:.1%} pass  ({flagged} flagged)")
 
-    # Per-turn LLM scorers — normal turns only
-    print(f"\n  Running per-turn scorers ({len(normal_df)} normal turns)...")
-
-    rq_results = await async_evaluate_dataframe(
-        dataframe=normal_df, evaluators=[reflective_metric], concurrency=CONCURRENCY,
+    # Per-turn LLM scorers — run all in parallel to cut wall-clock time ~4x.
+    # return_exceptions=True means one scorer crashing doesn't cancel the others.
+    print(f"\n  Running per-turn scorers ({len(normal_df)} normal turns, in parallel)...")
+    _scored = await asyncio.gather(
+        async_evaluate_dataframe(dataframe=normal_df, evaluators=[reflective_metric],              concurrency=CONCURRENCY),
+        async_evaluate_dataframe(dataframe=normal_df, evaluators=[emotional_acknowledgment_metric], concurrency=CONCURRENCY),
+        async_evaluate_dataframe(dataframe=normal_df, evaluators=[does_not_answer_metric],          concurrency=CONCURRENCY),
+        async_evaluate_dataframe(dataframe=normal_df, evaluators=[stays_in_scope_metric],           concurrency=CONCURRENCY),
+        async_evaluate_dataframe(dataframe=normal_df, evaluators=[response_length_check]),
+        return_exceptions=True,
     )
+
+    def _or_empty(result, name):
+        """Return result DataFrame; if the scorer failed, log and return empty so the rest of the pipeline still runs."""
+        if isinstance(result, BaseException):
+            print(f"  ⚠ Scorer '{name}' failed: {result} — metric will be empty in results", flush=True)
+            return normal_df[["conversation_id", "turn"]].copy()
+        return result
+
+    rq_results    = _or_empty(_scored[0], "reflective_questioning")
+    ea_results    = _or_empty(_scored[1], "emotional_acknowledgment")
+    dnafs_results = _or_empty(_scored[2], "does_not_answer_for_student")
+    sis_results   = _or_empty(_scored[3], "stays_in_scope")
+    rl_results    = _or_empty(_scored[4], "response_length")
+
     rq_avg, rq_total, rq_n = stats(extract_rows(rq_results, "reflective_questioning", "Reflective Questioning", run_name),
                                     "Reflective Questioning")
-
-    ea_results = await async_evaluate_dataframe(
-        dataframe=normal_df, evaluators=[emotional_acknowledgment_metric], concurrency=CONCURRENCY,
-    )
     ea_avg, ea_total, ea_n = stats(extract_rows(ea_results, "emotional_acknowledgment", "Emotional Acknowledgment", run_name),
                                     "Emotional Acknowledgment")
-
-    dnafs_results = await async_evaluate_dataframe(
-        dataframe=normal_df, evaluators=[does_not_answer_metric], concurrency=CONCURRENCY,
-    )
     dnafs_avg, dnafs_total, dnafs_n = stats(extract_rows(dnafs_results, "does_not_answer_for_student", "Does Not Answer for Student", run_name),
                                              "Does Not Answer for Student")
-
-    sis_results = await async_evaluate_dataframe(
-        dataframe=normal_df, evaluators=[stays_in_scope_metric], concurrency=CONCURRENCY,
-    )
     sis_avg, sis_total, sis_n = stats(extract_rows(sis_results, "stays_in_scope", "Stays in Scope", run_name),
                                       "Stays in Scope")
 
-    rl_results = await async_evaluate_dataframe(
-        dataframe=normal_df, evaluators=[response_length_check],
-    )
     rl_rows = extract_rows(rl_results, "response_length", "Response Length", run_name)
     rl_flagged = sum(1 for r in rl_rows if str(r.get("label", "")).lower() == "fail")
     rl_pass_rate = (len(rl_rows) - rl_flagged) / len(rl_rows) if rl_rows else 0
@@ -898,7 +903,23 @@ def main():
           f"{len(summary_df)} summary turns, and {len(conv_df)} conversations.")
     print(f"Candidate model: {candidate_model}\n")
 
-    asyncio.run(run_evals(regular_df, normal_df, crisis_df, summary_df, conv_df, conv_order, run_name, output_dir, candidate_model))
+    # Save a checkpoint immediately after safety signals so the artifact upload step
+    # always has something to find, even if the job times out during LLM scoring.
+    checkpoint_path = os.path.join(output_dir, f"{run_name}_results.csv")
+    keep_cols = [c for c in ["conversation_id", "turn", "candidate_model", "persona_name",
+                              "assistant_name", "student_message", "assistant_response",
+                              "has_safety_signal"] if c in regular_df.columns]
+    regular_df[keep_cols].to_csv(checkpoint_path, index=False)
+    print(f"Safety-signal checkpoint saved to: {checkpoint_path} (overwritten by full results when done)\n")
+
+    # GitHub Actions sends SIGTERM ~7s before force-killing the runner on timeout.
+    # Exiting cleanly on SIGTERM lets the `if: always()` upload step run and pick up the checkpoint.
+    signal.signal(signal.SIGTERM, lambda sig, frame: sys.exit(0))
+
+    try:
+        asyncio.run(run_evals(regular_df, normal_df, crisis_df, summary_df, conv_df, conv_order, run_name, output_dir, candidate_model))
+    except (KeyboardInterrupt, SystemExit):
+        print("\nInterrupted — checkpoint file is available for upload.", flush=True)
 
 
 if __name__ == "__main__":
