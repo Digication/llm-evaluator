@@ -28,9 +28,9 @@
 | Response Length | **98.8%** | 96.9% | +1.9% ↑ |
 | Stop Sequence Misuse | **100.0%** | 99.4% | +0.6% ↑ |
 | Crisis Response | **7.2%** | 4.4% | +2.8% ↑ |
-| Summary Quality | **73.9%** | 68.2% | +5.7% ↑ * |
+| Summary Quality | 73.9% ⚠ | 68.2% | not comparable* |
 
-*Summary Quality comparison is partially confounded by the 198 bad closing-turn responses in flash.
+*Summary Quality **cannot be fairly compared** for this run. The flash dataset contains 302 closing-turn responses that start with `"searching for information in TORI"` (198 bare phrase, 104 followed by content). The evaluator (gpt-4o-mini) scored these very leniently — 74 of the 198 bare responses received **pass**, 117 received **partial**, and only 7 received **fail** — inflating the flash figure. Excluding all 302 affected rows, flash's clean summary quality is **78.5%** (vs flash-lite's 68.2%), but this comparison will be reliable only in the next clean run.
 
 ---
 
@@ -65,15 +65,21 @@ Still the weakest metric for both models, but flash-lite's pass rate more than d
 
 Flash still fails to warmly acknowledge emotions before pivoting to a reflective question in ~72% of turns. The prompt-level fix (adding an explicit acknowledgment step before the next question) would likely close most of this gap regardless of model.
 
-### 3. Graceful Closure drops notably in flash (94.5% vs 99.4%)
+### 3. Summary Quality metric is not trustworthy for flash (data quality issue)
 
-This is largely a data quality artefact: the ~198 conversations with `"searching for information in TORI"` as their closing response did not close gracefully. In a clean dataset, this metric would likely match flash-lite's 99%+ level.
+The reported 73.9% figure is meaningless for comparison purposes. The 302 TORI-affected closing responses were scored too leniently by gpt-4o-mini — 74 responses that contain nothing but `"searching for information in TORI"` received a **pass**. This inflates the number while simultaneously the bad responses drag it down, making the figure unreliable in both directions.
 
-### 4. Crisis Response remains low on both models (7.2% vs 4.4%)
+The clean pass rate (excluding all 302 affected rows) is **78.5%** — suggesting flash does write better summaries than flash-lite (68.2%) when it actually produces a summary. A fair comparison requires re-running generation with the fixed system prompts.
+
+### 4. Graceful Closure drop is a data quality artefact (94.5% vs 99.4%)
+
+The ~198 conversations with a bare TORI phrase as their closing response did not close gracefully. In a clean dataset, this metric would likely match flash-lite's 99%+ level.
+
+### 5. Crisis Response remains low on both models (7.2% vs 4.4%)
 
 Flash handles crisis disclosures slightly better, but both models fail the majority of flagged turns. The root cause is the same for both: the system prompt doesn't instruct the model to stop the reflection flow and provide crisis resources when a student signals distress. This is a **system prompt gap, not a model capability gap** — and the higher-priority fix regardless of model.
 
-### 5. Both models are near-identical on conversation structure
+### 6. Both models are near-identical on conversation structure
 
 Engagement arc, thematic coherence, persona consistency, repetitiveness, and ethical boundary handling all score 99%+ on both models. The core conversational quality is strong across the board.
 
@@ -85,7 +91,7 @@ Flash is a clear improvement over flash-lite on the metrics that matter most for
 
 - **Better reflective questioning** — asks deeper, more open-ended questions
 - **Better emotional attunement** — more often pauses to acknowledge feelings before moving on
-- **Better closing summaries** — higher summary quality despite the data quality drag
+- **Better closing summaries** — clean summary quality is 78.5% vs 68.2%, though the reported figure (73.9%) is unreliable due to data quality issues in this run
 
 The two weaknesses are shared across both models and are **prompt-level issues** rather than model-specific ones:
 
