@@ -117,35 +117,28 @@ based on what you've experienced so far?"
 
 ---
 
-## 4. 🟡 Summary Quality — Two targeted fixes
+## 4. 🟡 Summary Quality — One targeted fix
 
 **What the eval found:**  
-When students send "I'm done for now", the closing summary has two failure patterns: (a) TORI categories are tagged loosely — applied because they sound plausible rather than because those concepts were genuinely discussed; (b) the tone is clinical and report-like rather than warm and celebratory. Pass rate: **68–78%**.
+Pass rate: **68–78%** across both models. The specific pattern behind the failures was identified by reviewing actual Digication assistant showcase conversations alongside simulator-generated summaries.
 
-**What to add to the system prompt:**
+**Important context:**  
+With a 20-turn conversation covering significant ground, having 10 TORI categories in the summary is proportionate — not a sign of loose tagging.
 
-```
-### Closing Summary Rules
+**Fix — Use "You" framing, not "We"**  
+Some assistants narrate the summary as a joint experience between the student and the AI, using *"We explored..."* / *"We discussed..."* / *"We addressed..."*. This subtly shifts credit away from the student and reads more like a session report. Summaries written in second person keep the student at the center of their own reflection.
 
-When writing the closing summary after "I'm done for now":
+Example of "We" framing (Growth Guide):
+> *"We explored strategies like reading your work aloud and using peer support at the writing center."*  
+> *"We discussed embracing both positive and constructive feedback."*  
+> *"We addressed coping with setbacks and seeing them as learning opportunities."*
 
-Tone: Write as a warm, personal celebration of the student's reflection — not
-a report or an assessment. Use their own words where possible. Avoid academic
-or clinical language.
+Example of "You" framing (Echo Empathy):
+> *"You thoughtfully examined a client conversation, identifying a missed opportunity for reflective listening."*  
+> *"You planned to use reminders and peer feedback, highlighting the role of collaboration in habit formation."*  
+> *"You recognized your influence in fostering team-wide listening and reflection values."*
 
-TORI tagging: Only tag categories that were explicitly part of the conversation.
-If a topic was not directly raised or explored by the student, do not include it.
-When in doubt, leave it out — a shorter, accurate list is better than a longer,
-speculative one.
-
-Wrong: "Domain 4: Self-Efficacy — the student demonstrated metacognitive
-awareness through reflective questioning." (clinical, speculative)
-
-Right: "You came into this conversation unsure whether you'd made the right
-choice, and by the end you'd found your own answer to that — that's
-Domain 4: Self-Regulation, and it showed up clearly in how you described
-the moment you stopped second-guessing yourself."
-```
+The second version reads as the student's journey. The first reads as something that happened to them in a session.
 
 ---
 
