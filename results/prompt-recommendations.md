@@ -156,8 +156,10 @@ If all four fixes are implemented, expected improvements based on eval data:
 | Metric | Current | Expected after fix |
 |---|---|---|
 | Crisis Response | 4–7% | 85%+ |
-| Emotional Acknowledgment | 13–28% | 60%+ |
+| Emotional Acknowledgment | 13–28% | 55–70% (see note) |
 | Stays in Scope | 68% | 80%+ |
 | Summary Quality | 68–78% | 85%+ |
 
-Crisis Response and Emotional Acknowledgment are the highest-leverage changes — they address the two most common failure modes and require only a single paragraph each in the system prompt.
+**Note on Emotional Acknowledgment estimate:** The range is wide because the outcome depends on factors the prompt change alone can't fully control — how strictly the model follows the instruction across a long conversation, how emotional the student's message actually is, and that the evaluator's bar for "pass" (warm and specific) is genuinely high. Currently 52% of turns score "partial" — some acknowledgment is there but generic. The fix should convert a portion of those to "pass", but not all. A re-eval after the prompt change is the only way to get a reliable number.
+
+Crisis Response is the highest-leverage change — it addresses a safety gap and requires only a single paragraph in the system prompt.
