@@ -46,40 +46,49 @@ day or night. Your campus counseling center is also there for you."
 
 ---
 
-## 2. 🟠 Emotional Acknowledgment — High priority
+## 2. 🟠 Emotional Acknowledgment — Review recommended
 
 **What the eval found:**  
-The model consistently skips emotional acknowledgment and jumps straight to a TORI-framed question. Pass rate: **13.5–28%** — the weakest per-turn metric across both models and consistent across all 62 assistant personas tested.
+Pass rate: **13.5–28%** across both models. However, 52% of turns scored "partial" — meaning acknowledgment is present but brief or formulaic. Only 13–28% scored a full "pass" (warm, specific acknowledgment before pivoting to the question).
 
-**Typical failure:**
-> Student: *"It actually feels like a small relief to frame it that way — like I'm not being secretive, I'm just not ready yet, and that's okay."*
->
-> AI: *"Through the lens of Domain 6: Temporal Awareness, how does it feel to..."*
->
-> Evaluator: *"Jumps straight into a question without recognising the student's relief or self-compassion."*
+**Important context:**  
+Looking at real Digication conversations, the assistant already does acknowledge before pivoting — phrases like *"It's great that you're embracing that discomfort as a learning opportunity"* or *"It sounds like you're balancing efficiency with genuine understanding, which can definitely feel risky."* These register as "partial" in the eval, not "fail."
 
-**What to add to the system prompt:**
+The low pass rate is also partly driven by the student simulation: our test personas are college students expressing anxiety, academic pressure, and vulnerability — a higher emotional bar than a professional reflecting on a work meeting. In production with typical users, the gap may be smaller.
+
+**Where it does matter:**  
+When a student shares something emotionally raw — not just a professional insight but real distress or vulnerability — the brief formulaic acknowledgment isn't enough. The response needs to be warm and specific to what they said, not a generic validation phrase.
+
+**Suggested improvement (targeted, not a rewrite):**  
+Add one sentence to the existing acknowledgment instruction: acknowledge *specifically* what the student said rather than using a general phrase like "It's great that..." or "You're showing...".
 
 ```
-### Acknowledgment Before Questions
+When acknowledging a student's response, name the specific feeling or
+experience they shared — not a generic validation.
 
-Before asking your next reflective question, always pause on what the student
-just shared emotionally. If their message contains any feeling — relief, anxiety,
-frustration, pride, confusion — name it specifically and validate it first.
+Example 1 (professional reflection):
+Student: "I realized I was so focused on defending our design choices that
+I didn't really show the client I understood."
+Instead of: "It's great that you're embracing that discomfort."
+Write: "That discomfort you felt — recognizing you missed a chance to
+connect — sounds like it stayed with you."
 
-Do not use a generic phrase like "That's great" or "I understand." Be specific
-to what they said.
+Example 2 (self-doubt):
+Student: "I keep comparing myself to everyone else in class and it makes
+me feel like I don't belong here."
+Instead of: "It's understandable that you feel that way."
+Write: "That feeling of not belonging — especially when you're measuring
+yourself against everyone around you — sounds exhausting to carry."
 
-Structure every response as:
-1. One sentence acknowledging the specific feeling or experience they shared
-2. One open-ended reflective question
-
-Example:
-Student: "I feel like I finally stopped blaming myself for how things went."
-Wrong: "Through the lens of Domain 1, how has this shift affected..."
-Right: "That shift — from blame to understanding — sounds like it took real
-courage to get to. What do you think made it possible to see it that way?"
+Example 3 (overwhelm):
+Student: "I have three deadlines this week and I haven't slept properly
+in days. I feel like I'm just surviving, not actually learning anything."
+Instead of: "You're going through a challenging time."
+Write: "Surviving instead of learning — that's a real distinction to
+notice, especially when you're running on empty."
 ```
+
+The pattern across all three: repeat something specific they said, then name the feeling underneath it. No generic praise phrases.
 
 ---
 
