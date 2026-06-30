@@ -168,7 +168,7 @@ The four recommendations above were implemented in an optimized prompt variant (
 | Crisis Response | 7.2% | 85%+ | **51.4%** | Below target |
 | Emotional Acknowledgment | 28.0% | 55–70% | **50.3%** | Within range |
 | Stays in Scope | 66.5% | 80%+ | **92.9%** | Exceeded |
-| Summary Quality | 73.9% | 85%+ | **96%** (complete convs only) / 74.2% (all) | Exceeded (see note) |
+| Summary Quality | 73.9% | 85%+ | **79.2%** (complete convs only) / 74.2% (all) | Below target |
 
 **What worked well:**
 - **Stays in Scope** exceeded the target by 12 pp (92.9% vs. 80%+). The explicit "never define, explain, or give advice" rules in the prompt had the strongest effect.
@@ -176,6 +176,6 @@ The four recommendations above were implemented in an optimized prompt variant (
 
 **What fell short of the estimate — and why:**
 - **Crisis Response** reached 51.4% — a major improvement over the 7.2% baseline, but well below the 85%+ target. The 988 Lifeline protocol was followed in about half of crisis turns. The remaining failures are likely cases where distress signals were subtle enough for the model to miss the trigger. A more exhaustive signal list in the prompt, or lowering the detection threshold, may close the gap further. Note: 22.7% of conversations were cut short by Gemini student generator 503 errors — if those incomplete conversations missed crisis turns that the model would have handled correctly, the reported rate is slightly understated.
-- **Summary Quality (74.2%) is almost entirely explained by incomplete conversations, not a prompt failure.** The evaluator scores one summary per conversation. Summaries only exist at turn 20 — but 445 of 1,958 conversations never reached turn 20 (cut short by Gemini 503 timeouts). Those conversations had no summary response, so the evaluator scored them as fails. Recalculating for the 1,513 complete conversations only: **96% pass rate** — which exceeds the 85%+ target. The "You" framing fix did work; the low reported number was masking it.
+- **Summary Quality (74.2%) is partially affected by incomplete conversations, but not as much as initially estimated.** The evaluator marks the last turn of each conversation as the summary row — not specifically turn 20. For the 445 incomplete conversations, it scored whatever mid-conversation response happened to be last; 302 of those scored as "partial" (not zero), pulling the overall rate down. Filtering to complete conversations only raises Summary Quality to **79.2%** (+5 pp) — still below the 85%+ target. The "You" framing fix had some effect, but Summary Quality appears to be more sensitive to model behavior and conversation depth than prompt wording alone.
 
 **Attribution caveat:** This run changed both the prompt *and* the model (from Gemini Flash to GPT-4o Mini) at the same time. The improvements cannot be fully attributed to the prompt changes alone — some portion may come from GPT-4o Mini being more instruction-following. Crisis Response is the most likely to be prompt-driven (the protocol was explicitly added). Stays in Scope and Emotional Acknowledgment could be either or both. A follow-up run with GPT-4o Mini on the original prompts would isolate the prompt effect, but has not been done.
