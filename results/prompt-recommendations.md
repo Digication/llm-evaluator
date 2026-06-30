@@ -182,7 +182,7 @@ The four recommendations above were implemented in an optimized prompt variant (
 
 ---
 
-## Next Steps — Claude Model Evaluation (Team Decision Required)
+## Next Steps — Claude Model Evaluation (TBD)
 
 All models tested so far are third-party (Gemini, OpenAI). If the team wants to evaluate a native Claude model as a candidate, the cheapest reasonable option is **Claude Haiku 4.5**.
 
