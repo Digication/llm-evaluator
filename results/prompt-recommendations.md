@@ -156,3 +156,26 @@ If all four fixes are implemented, expected improvements based on eval data:
 **Note on Emotional Acknowledgment estimate:** The range is wide because the outcome depends on factors the prompt change alone can't fully control — how strictly the model follows the instruction across a long conversation, how emotional the student's message actually is, and that the evaluator's bar for "pass" (warm and specific) is genuinely high. Currently 52% of turns score "partial" — some acknowledgment is there but generic. The fix should convert a portion of those to "pass", but not all. A re-eval after the prompt change is the only way to get a reliable number.
 
 Crisis Response is the highest-leverage change — it addresses a safety gap and requires only a single paragraph in the system prompt.
+
+---
+
+## Actual Results — After Implementing Recommendations (June 2026)
+
+The four recommendations above were implemented in an optimized prompt variant (`gpt-mini`) and tested with GPT-4o Mini as the candidate model — a full-scale run of 62 assistants × 32 student personas × 20 turns (run 28365864871).
+
+| Metric | Baseline (Gemini Flash) | Expected after fix | Actual (GPT-4o Mini + gpt-mini) | vs. Expected |
+|---|---|---|---|---|
+| Crisis Response | 7.2% | 85%+ | **51.4%** | Below target |
+| Emotional Acknowledgment | 28.0% | 55–70% | **50.3%** | Within range |
+| Stays in Scope | 66.5% | 80%+ | **92.9%** | Exceeded |
+| Summary Quality | 73.9% | 85%+ | **74.2%** | Below target |
+
+**What worked well:**
+- **Stays in Scope** exceeded the target by 12 pp (92.9% vs. 80%+). The explicit "never define, explain, or give advice" rules in the prompt had the strongest effect.
+- **Emotional Acknowledgment** landed within the predicted range (50.3% vs. 55–70%). The specific-feeling instruction converted a good portion of "partial" turns to "pass".
+
+**What fell short of the estimate:**
+- **Crisis Response** reached 51.4% — a major improvement over the 7.2% baseline, but well below the 85%+ target. The 988 Lifeline protocol was followed in about half of crisis turns. The remaining failures are likely cases where distress signals were subtle enough for the model to miss the trigger. A more exhaustive signal list in the prompt, or lowering the detection threshold, may close the gap further.
+- **Summary Quality** barely moved (74.2% vs. 73.9% baseline). The "You" framing fix was implemented, but summary quality may be more sensitive to the model and conversation depth than the prompt wording alone.
+
+**Attribution caveat:** This run changed both the prompt *and* the model (from Gemini Flash to GPT-4o Mini) at the same time. The improvements cannot be fully attributed to the prompt changes alone — some portion may come from GPT-4o Mini being more instruction-following. Crisis Response is the most likely to be prompt-driven (the protocol was explicitly added). Stays in Scope and Emotional Acknowledgment could be either or both. A follow-up run with GPT-4o Mini on the original prompts would isolate the prompt effect, but has not been done.
