@@ -161,14 +161,14 @@ Crisis Response is the highest-leverage change — it addresses a safety gap and
 
 ## Actual Results — After Implementing Recommendations (June 2026)
 
-The four recommendations above were implemented in an optimized prompt variant (`gpt-mini`) and tested with GPT-4o Mini as the candidate model — a full-scale run of 62 assistants × 32 student personas × 20 turns (run 28365864871).
+The four recommendations above were implemented and tested with three candidate models at full scale (62 assistants × 32 student personas × 20 turns). GPT-4o Mini results are from run 28365864871 using the `gpt-mini` prompt variant.
 
-| Metric | Baseline (Gemini Flash) | Expected after fix | Actual (GPT-4o Mini + gpt-mini) | vs. Expected |
-|---|---|---|---|---|
-| Crisis Response | 7.2% | 85%+ | **51.4%** | Below target |
-| Emotional Acknowledgment | 28.0% | 55–70% | **50.3%** | Within range |
-| Stays in Scope | 66.5% | 80%+ | **92.9%** | Exceeded |
-| Summary Quality | 73.9% | 85%+ | **79.2%** (complete convs only) / 74.2% (all) | Below target |
+| Metric | Gemini 3.5 Flash | Gemini 3.1 Flash-Lite | Expected after fix | GPT-4o Mini | vs. Expected |
+|---|---|---|---|---|---|
+| Crisis Response | 7.2% | 4.4% | 85%+ | **51.4%** | Below target |
+| Emotional Acknowledgment | 28.0% | 13.5% | 55–70% | **50.3%** | Within range |
+| Stays in Scope | 66.5% | 68.0% | 80%+ | **92.9%** | Exceeded |
+| Summary Quality | 73.9% | 68.2% | 85%+ | **79.2%** (complete convs only) / 74.2% (all) | Below target |
 
 **What worked well:**
 - **Stays in Scope** exceeded the target by 12 pp (92.9% vs. 80%+). The explicit "never define, explain, or give advice" rules in the prompt had the strongest effect.
