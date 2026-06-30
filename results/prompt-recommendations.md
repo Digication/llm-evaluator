@@ -179,3 +179,19 @@ The four recommendations above were implemented in an optimized prompt variant (
 - **Summary Quality (74.2%) is partially affected by incomplete conversations, but not as much as initially estimated.** The evaluator marks the last turn of each conversation as the summary row — not specifically turn 20. For the 445 incomplete conversations, it scored whatever mid-conversation response happened to be last; 302 of those scored as "partial" (not zero), pulling the overall rate down. Filtering to complete conversations only raises Summary Quality to **79.2%** (+5 pp) — still below the 85%+ target. The "You" framing fix had some effect, but Summary Quality appears to be more sensitive to model behavior and conversation depth than prompt wording alone.
 
 **Attribution caveat:** This run changed both the prompt *and* the model (from Gemini Flash to GPT-4o Mini) at the same time. The improvements cannot be fully attributed to the prompt changes alone — some portion may come from GPT-4o Mini being more instruction-following. Crisis Response is the most likely to be prompt-driven (the protocol was explicitly added). Stays in Scope and Emotional Acknowledgment could be either or both. A follow-up run with GPT-4o Mini on the original prompts would isolate the prompt effect, but has not been done.
+
+---
+
+## Next Steps — Claude Model Evaluation (Team Decision Required)
+
+All models tested so far are third-party (Gemini, OpenAI). If the team wants to evaluate a native Claude model as a candidate, the cheapest reasonable option is **Claude Haiku 4.5**.
+
+| Model | Input cost | Output cost | Estimated full-run cost |
+|---|---|---|---|
+| GPT-4o Mini *(current baseline)* | $0.15/1M tokens | $0.60/1M tokens | ~$40 |
+| Claude Haiku 4.5 | $1.00/1M tokens | $5.00/1M tokens | ~$273 |
+| Claude Sonnet 4.6 | $3.00/1M tokens | $15.00/1M tokens | ~$820 |
+
+Full-run scale: 62 assistants × 32 personas × 20 turns ≈ 242M input tokens, 6.2M output tokens.
+
+**Recommendation:** Hold until the team decides whether a Claude comparison is a priority. Haiku 4.5 is 6–7× more expensive than GPT-4o Mini for a single run, and may score lower on nuanced instruction-following (crisis protocol, scope boundaries). Sonnet 4.6 would be the fairer comparison but costs ~$820 per run. If the goal is production model selection, the cost is justified. If the goal is benchmarking only, the current GPT-4o Mini results may be sufficient.
